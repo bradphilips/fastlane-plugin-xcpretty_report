@@ -14,11 +14,15 @@ module Fastlane
           path = File.join(output_path, params[:name]) + "." + report
           reports << "--report '#{report}' --output '#{path}' "
         end
-        Actions.sh("cat '#{log_file}' | bundle exec xcpretty #{reports}", log: $verbose)
 
         if params[:use_json_formatter]
           path = File.join(output_path, params[:name]) + ".json"
           Actions.sh("cat '#{log_file}' | XCPRETTY_JSON_FILE_OUTPUT='#{path}' bundle exec xcpretty -f `xcpretty-json-formatter`", log: $verbose)
+        elsif params[:custom_formatter] 
+          custom_formatter = params[:custom_formatter]
+          Actions.sh("cat '#{log_file}' | bundle exec xcpretty -f `#{custom_formatter}`", log: $verbose)
+        else
+          Actions.sh("cat '#{log_file}' | bundle exec xcpretty #{reports}", log: $verbose)
         end
       end
 
@@ -41,7 +45,7 @@ module Fastlane
                                   env_name: "XCPRETTY_REPORT_OUTPUT_PATH",
                                description: "Path for output directory",
                                   optional: false,
-                                      type: String),
+                                      type: String),                                      
           FastlaneCore::ConfigItem.new(key: :name,
                                   env_name: "XCPRETTY_REPORT_NAME",
                                description: "Name for report – defaults to 'report'",
@@ -54,11 +58,16 @@ module Fastlane
                                   optional: false,
                              default_value: ['junit', 'html'],
                                       type: Array),
+          FastlaneCore::ConfigItem.new(key: :custom_formatter,
+                                  env_name: "XCPRETTY_REPORT_CUSTOM_FORMATTER",
+                               description: "Custom formatter for the output",
+                                  optional: true,
+                                      type: String),
           FastlaneCore::ConfigItem.new(key: :use_json_formatter,
                                   env_name: "XCPRETTY_REPORT_JSON_FILE_OUTPUT",
                                description: "Outputs a report using 'xcpretty-json-formatter'",
                                   optional: true,
-                                 is_string: false)
+                                 is_string: false)                               
         ]
       end
 
